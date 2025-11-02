@@ -1,0 +1,34 @@
+# Actuator configuration for monitoring and health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    build:
+      enabled: true
+
+# Info for actuator/info endpoint
+info:
+  app:
+    name: TaskSphere
+    description: Project Management System with Real-time Updates
+    version: 1.0.0
+    encoding: @project.build.sourceEncoding@
+    java:
+      version: @java.version@

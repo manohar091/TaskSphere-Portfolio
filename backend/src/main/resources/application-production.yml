@@ -1,0 +1,133 @@
+# Production Configuration with AWS Secrets Manager
+spring:
+  application:
+    name: tasksphere
+  
+  # AWS Secrets Manager Configuration
+  config:
+    import: 
+      - "aws-secretsmanager:prod/tasksphere/config"
+      - "optional:file:.env"
+  
+  # Database Configuration (overridden by secrets)
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/tasksphere}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        use_sql_comments: false
+        generate_statistics: true
+
+  # Security Configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID:your-github-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:your-github-client-secret}
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:default-secret-key-for-development-only}
+    expiration: 86400000 # 24 hours
+
+# CORS Configuration
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  http2:
+    enabled: true
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:health,info,prometheus,metrics}
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: tasksphere
+      environment: ${SPRING_PROFILES_ACTIVE:production}
+    export:
+      prometheus:
+        enabled: true
+        step: 30s
+        descriptions: true
+
+# Logging Configuration
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.tasksphere: ${LOGGING_LEVEL_COM_TASKSPHERE:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_SECURITY:INFO}
+    org.hibernate.SQL: ${LOGGING_LEVEL_SQL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOGGING_LEVEL_SQL_PARAMS:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/tasksphere/application.log
+    max-size: 50MB
+    max-history: 30
+
+# AWS Configuration
+aws:
+  region: ${AWS_REGION:eu-west-1}
+  secretsmanager:
+    enabled: true
+    prefix: /secret
+    default-context: application
+    profile-separator: '_'
+
+# Multipart Configuration
+spring.servlet.multipart:
+  max-file-size: 10MB
+  max-request-size: 10MB
+
+# Session Configuration
+server.servlet.session:
+  timeout: 30m
+  cookie:
+    http-only: true
+    secure: true
+    same-site: strict
+
+# Cache Configuration
+spring.cache:
+  type: caffeine
+  caffeine:
+    spec: maximumSize=1000,expireAfterWrite=30m

@@ -1,0 +1,174 @@
+# ===============================
+# 🌐 Server Config
+# ===============================
+server:
+  port: 8081
+
+# ===============================
+# 🗄️ Database Configuration (MySQL)
+# ===============================
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/tasksphere_db01?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tasksphere_manohar}
+    password: ${DB_PASSWORD:Manohar@1234}   # Use environment variable in production
+  
+# ===============================
+# ⚙️ JPA / Hibernate Configuration
+# ===============================
+  jpa:
+    hibernate:
+      ddl-auto: update   # create tables automatically without Flyway
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        connection:
+          # provider_disables_autocommit: true
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+          # region:
+          #   factory_class: org.hibernate.cache.jcache.JCacheRegionFactory  # ===============================
+  # 🛠️ Flyway Migration Configuration
+  # ===============================
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+  
+# ===============================
+# 🧩 Application Info
+# ===============================
+  application:
+    name: tasksphere-backend
+
+# ===============================
+# 🚀 Redis Configuration
+# ===============================
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+# ===============================
+# 💾 Cache Configuration
+# ===============================
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000ms # 10 minutes default
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "tasksphere:"# ===============================
+# 📊 Management/Actuator Configuration
+# ===============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,env,loggers,threaddump,heapdump
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 60s
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+      percentiles:
+        http:
+          server:
+            requests: 0.5, 0.9, 0.95, 0.99
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    build:
+      enabled: true
+
+# Application info for actuator/info endpoint
+info:
+  app:
+    name: TaskSphere
+    description: Enterprise Project Management System with Real-time Updates
+    version: 1.0.0
+    developer: Manohar
+    environment: ${spring.profiles.active:default}
+  build:
+    timestamp: @maven.build.timestamp@
+    version: @project.version@
+  java:
+    version: @java.version@
+    vendor: @java.vendor@
+
+# ===============================
+# 📚 Swagger/OpenAPI Configuration
+# ===============================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true
+    show-extensions: true
+    show-common-extensions: true
+
+# ===============================
+# 📊 Logging Configuration
+# ===============================
+logging:
+  level:
+    com.zaxxer.hikari: INFO
+    org.flywaydb: INFO
+
+# ===============================
+# 🔐 JWT Security Configuration
+# ===============================
+app:
+  jwt:
+    secret: ${JWT_SECRET:TaskSphere2024$ecureSecretKey!ForPr0duction#JWT&Token$Authentication}
+    expiration: ${JWT_EXPIRATION:900000}      # 15 minutes in milliseconds (15 * 60 * 1000)
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days in milliseconds (7 * 24 * 60 * 60 * 1000)
+    issuer: ${JWT_ISSUER:tasksphere-api}
+    
+  # ===============================
+  #  File Upload / S3 Configuration
+  # ===============================
+  s3:
+    bucket: ${S3_BUCKET:tasksphere-dev-bucket}  # For development/testing
+    region: ${S3_REGION:us-east-1}
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
